@@ -1,0 +1,86 @@
+{# Default Typst template for xtctool #}
+{# Configurable parameters:
+   - width_pt, height_pt: Page dimensions in points
+   - margin_left, margin_right, margin_top, margin_bottom: Page margins
+   - font: Font family (default: "Liberation Serif")
+   - font_size: Font size in points (default: 11pt)
+   - line_spacing: Line spacing multiplier (default: 1.2)
+   - language: Language code (default: "en")
+   - list_spacing: Space between list items (default: 8pt)
+   - list_tight: Remove extra spacing in lists (default: false)
+   - show_page_numbers: Show page numbers in footer (default: true)
+   - page_number_size: Page number font size (default: 10pt)
+   - show_toc: Show table of contents (default: false)
+   - toc_title: TOC title (default: "Contents")
+   - markdown_file: Path to markdown file to include
+#}
+
+#set page(
+  width: {{ width_pt }}pt,
+  height: {{ height_pt }}pt,
+  margin: (
+    left: {{ margin_left|default(16) }}pt,
+    right: {{ margin_right|default(16) }}pt,
+    top: {{ margin_top|default(24) }}pt,
+    bottom: {{ margin_bottom|default(28) }}pt,
+  ),
+{% if show_page_numbers|default(true) %}
+  footer: context [
+    #set text(size: {{ page_number_size|default(12) }}pt)
+    #align(center, counter(page).display("1"))
+  ],
+{% endif %}
+)
+
+#set text(
+  font: "{{ font|default('Liberation Serif') }}",
+  size: {{ font_size|default(11) }}pt,
+  lang: "{{ language|default('en') }}",
+  hyphenate: true,
+  costs: (
+    hyphenation: 30%,
+    orphan: 50%,
+    widow: 50%,
+  ),
+)
+
+#set par(
+  leading: {{ line_spacing|default(1.2) }}em,
+  justify: {{ justify|default('true') }},
+  spacing: {{ line_spacing|default(1.2) }}em,
+  first-line-indent: 1.5em,
+)
+
+#set list(
+  spacing: auto,
+  tight: false,
+)
+
+#set enum(
+  spacing: auto,
+  tight: false,
+)
+
+// Control spacing around list blocks (not between items)
+#show list: it => block(above: 0.65em, below: 0.65em, it)
+#show enum: it => block(above: 0.65em, below: 0.65em, it)
+
+#show heading: it => block(above: 1.5em, below: 1em)[
+  #set text(weight: "bold")
+  #it.body
+]
+
+{% if show_toc|default(false) %}
+#outline(
+  title: "{{ toc_title|default('Contents') }}",
+)
+#pagebreak()
+{% endif %}
+
+{% if markdown_file %}
+#import "@preview/cmarker:0.1.7"
+
+#cmarker.render(read("{{ markdown_file }}"))
+{% else %}
+{{ content|default('') }}
+{% endif %}

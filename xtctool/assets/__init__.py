@@ -5,6 +5,8 @@ from .image import ImageAsset
 from .pdf import PDFAsset
 from .xtframe import XTFrameAsset, FrameAsset, FileXTFrameAsset, FileFrameAsset
 from .xtcontainer import XTContainerAsset
+from .typst import TypstFileAsset
+from .markdown import MarkdownFileAsset
 
 __all__ = [
     'Asset',
@@ -17,4 +19,6 @@ __all__ = [
     'FileXTFrameAsset',
     'FileFrameAsset',  # Backwards compatibility
     'XTContainerAsset',
+    'TypstFileAsset',
+    'MarkdownFileAsset',
 ]

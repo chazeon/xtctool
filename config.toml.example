@@ -5,6 +5,15 @@
 width = 480
 height = 800
 
+# Frame format: "xth" (4-level grayscale) or "xtg" (1-bit monochrome)
+format = "xth"
+
+# Resampling method for resizing images
+# Options: LANCZOS (smooth, best for photos), BOX (best for text), BICUBIC, BILINEAR, NEAREST
+# BOX is recommended for text-heavy content (Typst/Markdown) - produces cleaner downsampling
+# LANCZOS is better for photos and continuous-tone images
+resample_method = "BOX"
+
 # XTC metadata (only used for .xtc output)
 title = ""
 author = ""
@@ -34,4 +43,29 @@ dither_strength = 0.8
 
 [typst]
 # Typst/Markdown rendering resolution
-ppi = 144.0
+ppi = 288
+
+# Template for Markdown rendering (relative to templates/ directory)
+template = "default.typ.jinja"
+
+# Typography settings
+# Good fonts for e-paper: Liberation Serif, Georgia, Linux Libertine, Noto Serif
+font = "Liberation Serif"
+font_size = 18
+line_spacing = 0.7
+justify = true
+language = "en"
+
+# Page margins (in points)
+margin_left = 16
+margin_right = 16
+margin_top = 24
+margin_bottom = 28
+
+# Page numbers
+show_page_numbers = true
+page_number_size = 12  # Font size for page numbers (in points)
+
+# Table of contents
+show_toc = false
+toc_title = "Contents"

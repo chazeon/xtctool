@@ -8,7 +8,10 @@ from pathlib import Path
 from typing import Any, Optional
 from tqdm.auto import tqdm
 
-from ..assets import PDFAsset, ImageAsset, XTFrameAsset, FileXTFrameAsset, XTContainerAsset
+from ..assets import (
+    PDFAsset, ImageAsset, XTFrameAsset, FileXTFrameAsset,
+    XTContainerAsset, TypstFileAsset, MarkdownFileAsset
+)
 from ..debug import output as debug_output
 
 logger = logging.getLogger(__name__)
@@ -18,6 +21,8 @@ DEFAULT_CONFIG = {
     'output': {
         'width': 480,
         'height': 800,
+        'format': 'xth',
+        'resample_method': 'LANCZOS',  # BOX is better for text, LANCZOS for photos
         'title': '',
         'author': '',
         'publisher': '',
@@ -80,6 +85,10 @@ def create_asset(path: str):
         from PIL import Image
         img = Image.open(path)
         return ImageAsset(img)
+    elif ext == '.typ':
+        return TypstFileAsset(path)
+    elif ext == '.md':
+        return MarkdownFileAsset(path)
     elif ext == '.xtc':
         return XTContainerAsset(path)
     elif ext in ['.xth', '.xtg']:

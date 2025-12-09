@@ -30,7 +30,8 @@ class XTHWriter:
         thresholds: Tuple[int, int, int] = (85, 170, 255),
         invert: bool = False,
         enable_dithering: bool = True,
-        dither_strength: float = 0.8
+        dither_strength: float = 0.8,
+        resample_method: Image.Resampling = Image.Resampling.LANCZOS
     ) -> np.ndarray:
         """Convert image to 4-level grayscale using threshold-based quantization.
 
@@ -40,6 +41,7 @@ class XTHWriter:
             invert: Invert colors (applies to source image before quantization)
             enable_dithering: Enable Floyd-Steinberg dithering
             dither_strength: Dithering strength (0.0-1.0)
+            resample_method: PIL resampling method (default: LANCZOS, BOX recommended for text)
 
         Returns:
             2D numpy array with values 0-3
@@ -50,7 +52,7 @@ class XTHWriter:
 
         # Resize to target dimensions if needed
         if image.size != (self.width, self.height):
-            image = image.resize((self.width, self.height), Image.Resampling.LANCZOS)
+            image = image.resize((self.width, self.height), resample_method)
 
         # Apply invert to source if requested
         if invert:
@@ -130,7 +132,8 @@ class XTHWriter:
         thresholds: Tuple[int, int, int] = (85, 170, 255),
         invert: bool = False,
         enable_dithering: bool = True,
-        dither_strength: float = 0.8
+        dither_strength: float = 0.8,
+        resample_method: Image.Resampling = Image.Resampling.LANCZOS
     ) -> bytes:
         """Encode image to XTH format as bytes.
 
@@ -140,13 +143,14 @@ class XTHWriter:
             invert: Invert colors
             enable_dithering: Enable Floyd-Steinberg dithering
             dither_strength: Dithering strength (0.0-1.0)
+            resample_method: PIL resampling method (default: LANCZOS, BOX recommended for text)
 
         Returns:
             Complete XTH file data as bytes
         """
         # Convert to 4-level grayscale
         pixel_values = self._convert_to_4level(
-            image, thresholds, invert, enable_dithering, dither_strength
+            image, thresholds, invert, enable_dithering, dither_strength, resample_method
         )
 
         # Encode to bit planes

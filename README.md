@@ -1,15 +1,18 @@
 # xtctool
 
-Convert images and documents to XTH/XTG/XTC formats for ESP32 e-paper displays.
+Convert images and documents to XTH/XTG/XTC formats for [Xteink](https://www.xteink.com/) ESP32 e-paper displays.
+
+Built for the [Xteink X4](https://www.xteink.com/products/xteink-x4) and compatible devices - compact e-paper displays powered by ESP32. The X4 is a pocket-sized 4.3" e-ink reader with 480×800 resolution, perfect for reading books, documents, and displaying custom content.
 
 ## Features
 
 - **Unified conversion pipeline** - handles multiple input formats through a single `convert` command
-- **Multiple input formats**: PDF, PNG, JPEG, XTC, XTH, XTG
+- **Multiple input formats**: PDF, PNG, JPEG, Markdown, Typst, XTC, XTH, XTG
 - **Multiple output formats**:
   - **XTH** - 4-level grayscale (2 bits per pixel)
   - **XTG** - 1-bit monochrome (1 bit per pixel)
   - **XTC** - multi-page container with metadata
+- **Markdown & Typst support** - render text documents with full typography control
 - **Configuration via TOML** - easily manage conversion settings
 - **Floyd-Steinberg dithering** - optional high-quality dithering with configurable strength
 - **Debug output** - decode frames back to PNG/PDF for inspection
@@ -28,32 +31,37 @@ uv pip install -e .
 
 # Or with optional dependencies
 uv pip install -e ".[performance]"  # Adds numba for ~10x faster dithering
+uv pip install -e ".[markdown]"     # Adds Typst & Jinja2 for Markdown/Typst support
 ```
 
 ### Using pip
 
 ```bash
-# Basic installation
+# Basic installation (PDF, images only)
 pip install .
 
-# With development tools
-pip install -e ".[dev]"
+# With Markdown/Typst support
+pip install ".[markdown]"
 
 # With performance optimization
 pip install ".[performance]"
+
+# With everything
+pip install ".[markdown,performance]"
 ```
 
 ### Dependencies
 
-All required dependencies are automatically installed:
-- **PyMuPDF** (fitz) - PDF rendering (no external tools needed!)
+**Core dependencies** (automatically installed):
+- **PyMuPDF** (fitz) - PDF rendering
 - **Pillow** - Image processing
 - **NumPy** - Array operations
 - **Click** - CLI interface
 - **tqdm** - Progress bars
 
-Optional:
-- **numba** - JIT compilation for 10x faster dithering (install with `[performance]` extra)
+**Optional dependencies**:
+- **`[markdown]`** - Typst (0.2+) & Jinja2 (3.0+) for Markdown/Typst rendering
+- **`[performance]`** - numba for 10x faster dithering
 
 ## Quick Start
 
@@ -246,12 +254,108 @@ xtctool convert input.pdf -o output.xtc -c config.toml
 - `dither`: Enable Floyd-Steinberg dithering
 - `dither_strength`: Dithering intensity (0.0-1.0)
 
+**`[typst]` section (Markdown/Typst rendering):**
+- `ppi`: Rendering resolution (higher = better quality via supersampling)
+- `template`: Template file for Markdown rendering (default: `default.typ.jinja`)
+- `font`, `font_size`, `line_spacing`: Typography settings
+- `margin_left`, `margin_right`, `margin_top`, `margin_bottom`: Page margins
+- `show_page_numbers`, `show_toc`: Display options
+
+## Markdown & Typst Rendering
+
+Convert Markdown and Typst documents to e-paper formats with full typography control.
+
+### Quick Examples
+
+```bash
+# Convert Markdown to XTC (with default template)
+xtctool convert document.md -o document.xtc
+
+# Convert Typst file to XTC
+xtctool convert document.typ -o document.xtc
+
+# Use custom configuration
+xtctool convert README.md -o readme.xtc -c config.toml
+```
+
+### How It Works
+
+**Markdown rendering:**
+1. Your `.md` file is wrapped in a Typst template (Jinja2)
+2. The template uses `cmarker` to render markdown with Typst styling
+3. Typst compiles to high-resolution PNG (with supersampling for quality)
+4. Image is downsampled and dithered to e-paper format
+
+**Typst rendering:**
+1. Your `.typ` file is compiled directly by Typst
+2. Supports multi-file projects (e.g., `#include` directives work)
+3. Same supersampling and dithering pipeline
+
+### Templates
+
+Templates are installed with xtctool in `xtctool/templates/`:
+- `default.typ.jinja` - Default template with configurable typography
+
+**Using custom templates:**
+
+1. Create your template (e.g., `my-template.typ.jinja`):
+```jinja
+#set page(width: {{ width_pt }}pt, height: {{ height_pt }}pt)
+#set text(font: "{{ font }}", size: {{ font_size }}pt)
+
+#import "@preview/cmarker:0.1.7"
+#cmarker.render(read("{{ markdown_file }}"))
+```
+
+2. Specify in config:
+```toml
+[typst]
+template = "/path/to/my-template.typ.jinja"
+```
+
+**Available template variables:**
+- `width_pt`, `height_pt` - Page dimensions in points
+- `width_px`, `height_px` - Page dimensions in pixels
+- `ppi` - Rendering resolution
+- `font`, `font_size`, `line_spacing` - Typography
+- `margin_left`, `margin_right`, `margin_top`, `margin_bottom` - Margins
+- `markdown_file` - Path to markdown file (for templates)
+
+See `xtctool/templates/README.md` for more details.
+
+### Configuration for Text
+
+**Recommended settings for text-heavy documents:**
+
+```toml
+[output]
+# Use BOX resampling for cleaner text (not LANCZOS)
+resample_method = "BOX"
+
+[typst]
+# Higher PPI = better quality via supersampling
+# 288 renders at 4x resolution, then downsamples
+ppi = 288
+
+# Typography
+font = "Liberation Serif"  # or "Times New Roman", "Georgia", etc.
+font_size = 18
+line_spacing = 1.1
+```
+
+**Why BOX resampling?**
+- LANCZOS causes blur and ringing artifacts in text
+- BOX averages pixels cleanly when downsampling from high-res render
+- Results in sharper, more readable text on e-paper
+
 ## File Formats
 
 ### Input Formats
 
 - **PDF** (`.pdf`) - Rendered page-by-page using PyMuPDF
 - **Images** (`.png`, `.jpg`, `.jpeg`) - Standard image formats
+- **Markdown** (`.md`) - Rendered via Typst templates (requires `[markdown]` extra)
+- **Typst** (`.typ`) - Native Typst documents (requires `[markdown]` extra)
 - **XTC** (`.xtc`) - Multi-page container (can be decoded)
 - **XTH** (`.xth`) - 4-level grayscale frame (can be reprocessed)
 - **XTG** (`.xtg`) - 1-bit monochrome frame (can be reprocessed)
@@ -463,7 +567,17 @@ For bugs and feature requests, please open an issue on GitHub.
 ## Acknowledgments
 
 - [XTC/XTG/XTH format specification][format-spec]
-- Xteink e-paper display project
+- [Xteink](https://www.xteink.com/) e-paper display project
+- [Xteink X4](https://www.xteink.com/products/xteink-x4) - compact 4.3" e-ink reader
 - PyMuPDF for efficient PDF rendering
+- Typst and cmarker for Markdown rendering
+
+## References
+
+**About Xteink X4:**
+- [Xteink X4 Product Page](https://www.xteink.com/products/xteink-x4)
+- [Xteink X4 Review - Good e-Reader](https://goodereader.com/blog/electronic-readers/xteink-x4-is-a-tiny-e-reader-with-magsafe)
+- [Xteink X4 Overview - Yanko Design](https://www.yankodesign.com/2025/12/09/xteink-x4-is-a-wallet-sized-ereader-that-snaps-onto-your-phone/)
+- [GitHub: Xteink X4 EPUB Reader](https://github.com/aryascripts/xteink-x4-epub-reader)
 
 [format-spec]: https://gist.github.com/CrazyCoder/b125f26d6987c0620058249f59f1327d

@@ -30,6 +30,7 @@ dev = [
 ]
 markdown = [
     "typst>=0.2.0",
+    "jinja2>=3.0.0",
 ]
 performance = [
     "numba>=0.56.0",  # JIT compilation for faster dithering (optional, ~10x speedup)
@@ -37,6 +38,9 @@ performance = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["xtctool"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"xtctool/templates" = "xtctool/templates"
 
 [tool.black]
 line-length = 100

@@ -29,7 +29,8 @@ class XTGWriter:
         threshold: int = 128,
         invert: bool = False,
         enable_dithering: bool = True,
-        dither_strength: float = 0.8
+        dither_strength: float = 0.8,
+        resample_method: Image.Resampling = Image.Resampling.LANCZOS
     ) -> np.ndarray:
         """Convert image to monochrome (1-bit).
 
@@ -39,6 +40,7 @@ class XTGWriter:
             invert: Invert colors
             enable_dithering: Enable Floyd-Steinberg dithering
             dither_strength: Dithering strength (0.0-1.0)
+            resample_method: PIL resampling method (default: LANCZOS, BOX recommended for text)
 
         Returns:
             2D numpy array with values 0 or 1
@@ -49,7 +51,7 @@ class XTGWriter:
 
         # Resize to target dimensions if needed
         if image.size != (self.width, self.height):
-            image = image.resize((self.width, self.height), Image.Resampling.LANCZOS)
+            image = image.resize((self.width, self.height), resample_method)
 
         # Convert to numpy array
         gray_array = np.array(image, dtype=np.uint8)
@@ -108,7 +110,8 @@ class XTGWriter:
         threshold: int = 128,
         invert: bool = False,
         enable_dithering: bool = True,
-        dither_strength: float = 0.8
+        dither_strength: float = 0.8,
+        resample_method: Image.Resampling = Image.Resampling.LANCZOS
     ) -> bytes:
         """Encode image to XTG format as bytes.
 
@@ -118,13 +121,14 @@ class XTGWriter:
             invert: Invert colors
             enable_dithering: Enable Floyd-Steinberg dithering
             dither_strength: Dithering strength (0.0-1.0)
+            resample_method: PIL resampling method (default: LANCZOS, BOX recommended for text)
 
         Returns:
             Complete XTG file data as bytes
         """
         # Convert to monochrome
         pixel_values = self._convert_to_monochrome(
-            image, threshold, invert, enable_dithering, dither_strength
+            image, threshold, invert, enable_dithering, dither_strength, resample_method
         )
 
         # Encode to bitmap

@@ -337,67 +337,6 @@ xtctool convert output.xtc -o debug.png  # Creates debug_001.png, debug_002.png,
 
 Debug PDFs now use lossless compression (quality=100) to show true frame quality without JPEG artifacts.
 
-## Complete Workflow Examples
-
-### Manga Workflow (Right-to-Left)
-
-```bash
-# 1. Configure for manga
-cat > manga-config.toml << EOF
-[output]
-width = 480
-height = 800
-direction = "rtl"
-language = "ja-JP"
-title = "My Manga Vol. 1"
-author = "Manga Artist"
-
-[pdf]
-resolution = 144
-
-[xth]
-threshold1 = 85
-threshold2 = 170
-threshold3 = 255
-dither = true
-dither_strength = 0.8
-EOF
-
-# 2. Convert
-uv run xtctool convert manga-vol1.pdf -o manga-vol1.xtc -c manga-config.toml
-
-# 3. Verify quality
-uv run xtctool convert manga-vol1.xtc -o preview.pdf
-
-# 4. Upload to device
-uv run xtctool upload manga-vol1.xtc --host 192.168.1.100
-```
-
-### Comic Workflow (Left-to-Right)
-
-```bash
-# Convert multiple sources
-uv run xtctool convert cover.png chapter1.pdf chapter2.pdf -o comic.xtc -c config.toml
-
-# Upload
-uv run xtctool upload comic.xtc --host 192.168.1.100 --remote-path /comics/issue1.xtc
-```
-
-### High-Quality Document
-
-```bash
-# High-DPI rendering for text documents
-cat > hq-config.toml << EOF
-[pdf]
-resolution = 200
-
-[xth]
-dither_strength = 0.9
-EOF
-
-uv run xtctool convert document.pdf -o document.xtc -c hq-config.toml
-```
-
 ## Development
 
 ### Running Tests
@@ -477,7 +416,7 @@ xtctool/
 - **Structure**: Header → Metadata → Page Index → Pages
 - **Supports**: Multiple pages, metadata, reading direction
 
-See `XTC-XTG-XTH-XTCH.md` for detailed format specifications.
+See `XTC-XTG-XTH-XTCH.md` for detailed format specifications, or refer to the [XTC/XTH format specification][format-spec] for additional technical details.
 
 ## Troubleshooting
 
@@ -494,6 +433,13 @@ See `XTC-XTG-XTH-XTCH.md` for detailed format specifications.
 - Adjust XTH thresholds in config.toml
 - For dark images: decrease thresholds
 - For light images: increase thresholds
+
+**Issue: Wrong size/aspect ratio or cropping**
+- **Manual resolution tuning required**: The PDF rendering resolution must be manually matched to your target display dimensions
+- Calculate the appropriate DPI based on your PDF's page size to fit the target resolution (e.g., 480×800)
+- For example: A Letter-size PDF (8.5"×11") at 144 DPI renders to ~1224×1584 pixels, which needs scaling to fit 480×800
+- Adjust `resolution` in config.toml to achieve the desired output size
+- Refer to the [format specification][format-spec] for display dimension requirements
 
 **Issue: Upload fails**
 - Check device IP: `ping 192.168.1.100`
@@ -516,6 +462,8 @@ For bugs and feature requests, please open an issue on GitHub.
 
 ## Acknowledgments
 
-- XTC/XTG/XTH format specification
+- [XTC/XTG/XTH format specification][format-spec]
 - Xteink e-paper display project
 - PyMuPDF for efficient PDF rendering
+
+[format-spec]: https://gist.github.com/CrazyCoder/b125f26d6987c0620058249f59f1327d

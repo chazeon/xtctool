@@ -1,0 +1,37 @@
+# xtctool conversion configuration
+
+[output]
+# Output dimensions
+width = 480
+height = 800
+
+# XTC metadata (only used for .xtc output)
+title = ""
+author = ""
+publisher = ""
+language = "en-US"
+direction = "ltr"  # ltr (left-to-right), rtl (right-to-left), ttb (top-to-bottom)
+
+[pdf]
+# PDF rendering resolution in DPI
+resolution = 144
+
+[xth]
+# XTH 4-level grayscale thresholds (0-255)
+threshold1 = 85
+threshold2 = 170
+threshold3 = 255
+invert = false
+dither = true
+dither_strength = 0.8
+
+[xtg]
+# XTG monochrome 1-bit threshold (0-255)
+threshold = 128
+invert = false
+dither = true
+dither_strength = 0.8
+
+[typst]
+# Typst/Markdown rendering resolution
+ppi = 144.0

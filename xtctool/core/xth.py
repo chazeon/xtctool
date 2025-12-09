@@ -31,7 +31,7 @@ class XTHWriter:
         invert: bool = False,
         enable_dithering: bool = True,
         dither_strength: float = 0.8,
-        resample_method: Image.Resampling = Image.Resampling.LANCZOS
+        resample_method: Image.Resampling = Image.Resampling.BOX
     ) -> np.ndarray:
         """Convert image to 4-level grayscale using threshold-based quantization.
 
@@ -133,7 +133,7 @@ class XTHWriter:
         invert: bool = False,
         enable_dithering: bool = True,
         dither_strength: float = 0.8,
-        resample_method: Image.Resampling = Image.Resampling.LANCZOS
+        resample_method: Image.Resampling = Image.Resampling.BOX
     ) -> bytes:
         """Encode image to XTH format as bytes.
 

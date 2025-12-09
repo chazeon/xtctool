@@ -34,8 +34,8 @@ class ImageAsset(BaseImageAsset):
             raise ValueError(f"Invalid format '{format_type}'. Must be 'xth' or 'xtg'")
 
         # Get resample method from config
-        resample_method_name = output_cfg.get('resample_method', 'LANCZOS').upper()
-        resample_method = getattr(Image.Resampling, resample_method_name, Image.Resampling.LANCZOS)
+        resample_method_name = output_cfg.get('resample_method', 'BOX').upper()
+        resample_method = getattr(Image.Resampling, resample_method_name, Image.Resampling.BOX)
 
         if format_type == 'xth':
             xth_cfg = config.get('xth', {})

@@ -30,7 +30,7 @@ class XTGWriter:
         invert: bool = False,
         enable_dithering: bool = True,
         dither_strength: float = 0.8,
-        resample_method: Image.Resampling = Image.Resampling.LANCZOS
+        resample_method: Image.Resampling = Image.Resampling.BOX
     ) -> np.ndarray:
         """Convert image to monochrome (1-bit).
 
@@ -111,7 +111,7 @@ class XTGWriter:
         invert: bool = False,
         enable_dithering: bool = True,
         dither_strength: float = 0.8,
-        resample_method: Image.Resampling = Image.Resampling.LANCZOS
+        resample_method: Image.Resampling = Image.Resampling.BOX
     ) -> bytes:
         """Encode image to XTG format as bytes.
 

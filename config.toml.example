@@ -51,7 +51,7 @@ template = "default.typ.jinja"
 # Typography settings
 # Good fonts for e-paper: Liberation Serif, Georgia, Linux Libertine, Noto Serif
 font = "Liberation Serif"
-font_size = 18
+font_size = 20
 line_spacing = 0.7
 justify = true
 language = "en"

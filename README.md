@@ -107,7 +107,7 @@ xtctool convert [OPTIONS] SOURCES... -o OUTPUT
 ```
 
 **Arguments:**
-- `SOURCES`: One or more input files (PDF, PNG, JPG, XTC, XTH, XTG)
+- `SOURCES`: One or more input files (PDF, PNG, JPG, XTC, XTH, XTG, TYP, MD)
 - `-o, --output`: Output file path (required)
 - `-c, --config`: Optional configuration file (TOML format)
 
@@ -135,6 +135,12 @@ xtctool convert document.pdf -o output.xth
 xtctool convert manga.pdf -o manga.xtc -c config.toml
 ```
 
+**Render markdown then convert to XTC:**
+```bash
+# Convert README.md to XTC using default template
+xtctool convert README.md -o readme.xtc -c config.toml
+```
+
 **Convert images to XTC:**
 ```bash
 # Multiple images → XTC container
@@ -160,6 +166,12 @@ xtctool convert input.xtc -o debug.pdf
 ```bash
 # Combine PDFs, images, and existing frames
 xtctool convert cover.png chapter1.pdf chapter2.pdf -o book.xtc
+```
+
+**Concatenate existing XTH/XTG/XTC files:**
+```bash
+# Combine multiple XTH/XTG/XTC into one XTC
+xtctool convert part1.xtc part2.xth part3.xtg -o full.xtc
 ```
 
 ### Upload Command

@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "xtctool"
+version = "0.1.0"
+description = "Convert PDF files to XTH/XTC format for ESP32 e-paper displays"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+dependencies = [
+    "click>=8.0.0",
+    "Pillow>=9.0.0",
+    "numpy>=1.20.0",
+    "requests>=2.28.0",
+    "PyMuPDF>=1.23.0",
+    "tqdm>=4.65.0",
+]
+
+
+[project.scripts]
+xtctool = "xtctool.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=22.0.0",
+    "mypy>=0.950",
+]
+markdown = [
+    "typst>=0.2.0",
+]
+performance = [
+    "numba>=0.56.0",  # JIT compilation for faster dithering (optional, ~10x speedup)
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["xtctool"]
+
+[tool.black]
+line-length = 100
+target-version = ['py38']

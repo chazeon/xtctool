@@ -45,8 +45,11 @@ dither_strength = 0.8
 # Typst/Markdown rendering resolution
 ppi = 288
 
-# Template for Markdown rendering (relative to templates/ directory)
-template = "default.typ.jinja"
+# Template for Markdown rendering
+# Built-in name (e.g., "default") or file path (e.g., "./my-template.typ.jinja", "/path/to/template.typ")
+# Built-in names are resolved to package templates with .typ.jinja extension
+# File paths are resolved relative to current working directory
+template = "default"
 
 # Typography settings
 # Good fonts for e-paper: Liberation Serif, Georgia, Linux Libertine, Noto Serif

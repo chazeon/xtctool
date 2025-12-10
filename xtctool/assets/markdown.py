@@ -2,7 +2,6 @@
 
 import logging
 import tempfile
-import shutil
 from typing import Any
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
@@ -51,8 +50,30 @@ class MarkdownFileAsset(FileAsset):
         height_pt = height
 
         # Get template settings
-        template_dir = Path(__file__).parent.parent / 'templates'
-        template_name = typst_cfg.get('template', 'default.typ.jinja')
+        template_spec = typst_cfg.get('template', 'default')
+
+        # Determine if template_spec is a built-in name or a file path
+        # Built-in: simple name like "default" (no path separator, no extension)
+        # File path: has extension or path separator like "./default", "my.typ.jinja", "/path/to/template"
+        is_builtin = ('/' not in template_spec and
+                     '\\' not in template_spec and
+                     '.' not in template_spec)
+
+        if is_builtin:
+            # Built-in template - look in package templates
+            template_dir = Path(__file__).parent.parent / 'templates'
+            template_name = f"{template_spec}.typ.jinja"
+            logger.debug(f"Using built-in template: {template_name}")
+        else:
+            # File path - resolve relative to current working directory
+            template_path = Path(template_spec).resolve()
+
+            if not template_path.exists():
+                raise FileNotFoundError(f"Template file not found: {template_spec} (resolved to {template_path})")
+
+            template_dir = template_path.parent
+            template_name = template_path.name
+            logger.info(f"Using custom template: {template_path}")
 
         # Template variables (with sensible defaults)
         # Note: Boolean values need to be lowercase strings for Typst
@@ -79,15 +100,21 @@ class MarkdownFileAsset(FileAsset):
             'toc_title': typst_cfg.get('toc_title', 'Contents'),
         }
 
-        # Create temporary working directory for multi-file rendering
-        temp_dir = Path(tempfile.mkdtemp(prefix='markdown_'))
+        # Create temporary Typst file in the markdown file's directory
+        # This ensures Typst can find the markdown file and all its resources (images, etc.)
+        markdown_path = Path(self.path).resolve()
+        markdown_dir = markdown_path.parent
+
+        # Create temp file in markdown's directory
+        temp_typst = tempfile.NamedTemporaryFile(
+            mode='w',
+            suffix='.typ',
+            dir=str(markdown_dir),
+            delete=False,
+            encoding='utf-8'
+        )
 
         try:
-            # Copy markdown file to temp directory
-            md_filename = Path(self.path).name
-            temp_md_path = temp_dir / md_filename
-            shutil.copy2(self.path, temp_md_path)
-
             # Load and render Jinja2 template
             jinja_env = Environment(
                 loader=FileSystemLoader(str(template_dir)),
@@ -95,23 +122,23 @@ class MarkdownFileAsset(FileAsset):
             )
             template = jinja_env.get_template(template_name)
 
-            # Add markdown_file to template vars
-            template_vars['markdown_file'] = md_filename
+            # Use just the filename since typst file and markdown are in same directory
+            template_vars['markdown_file'] = markdown_path.name
 
             typst_source = template.render(**template_vars)
 
-            # Write rendered Typst source to temp directory
-            typst_file = temp_dir / 'main.typ'
-            typst_file.write_text(typst_source, encoding='utf-8')
+            # Write rendered Typst source to temp file
+            temp_typst.write(typst_source)
+            temp_typst.close()
 
-            # Render using TypstRenderer with temp dir as root
+            # Render using TypstRenderer with markdown file's directory as root
+            # This allows images and other resources to be found
             renderer = TypstRenderer(ppi=ppi)
             logger.info(f"Rendering Markdown file: {self.path}")
-            images = renderer.render_file(str(typst_file), root_dir=str(temp_dir))
+            images = renderer.render_file(temp_typst.name, root_dir=str(markdown_dir))
 
             return [ImageAsset(img) for img in images]
 
         finally:
-            # Clean up temp directory
-            if temp_dir.exists():
-                shutil.rmtree(temp_dir)
+            # Clean up temp file
+            Path(temp_typst.name).unlink(missing_ok=True)

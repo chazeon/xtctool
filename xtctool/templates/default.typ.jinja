@@ -104,7 +104,11 @@
 {% if markdown_file %}
 #import "@preview/cmarker:0.1.7"
 
-#cmarker.render(read("{{ markdown_file }}"))
+// Override image function to resolve paths correctly relative to markdown file
+#cmarker.render(
+  read("{{ markdown_file }}"),
+  scope: (image: (source, alt: none, format: auto) => image(source, alt: alt, format: format))
+)
 {% else %}
 {{ content|default('') }}
 {% endif %}

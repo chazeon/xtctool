@@ -59,8 +59,8 @@ language = "en"
 # Page margins (in points)
 margin_left = 16
 margin_right = 16
-margin_top = 24
-margin_bottom = 28
+margin_top = 32
+margin_bottom = 32
 
 # Page numbers
 show_page_numbers = true

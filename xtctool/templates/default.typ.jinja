@@ -34,7 +34,7 @@
 
 #set text(
   font: "{{ font|default('Liberation Serif') }}",
-  size: {{ font_size|default(20) }}pt,
+  size: {{ font_size|default(24) }}pt,
   lang: "{{ language|default('en') }}",
   hyphenate: true,
   costs: (
@@ -49,6 +49,10 @@
   justify: {{ justify|default('true') }},
   spacing: {{ line_spacing|default(0.7) }}em,
   first-line-indent: 1.5em,
+  justification-limits: (
+    spacing: (min: 83.33% + 0pt, max: 120% + 0pt),
+    tracking: (min: -0.01em, max: 0.02em),
+  )
 )
 
 #set list(

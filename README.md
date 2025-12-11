@@ -82,7 +82,7 @@ uv run xtctool convert document.pdf -o document.xtc
 
 ```bash
 # Create config from example
-cp config.toml.example config.toml
+cp config.example.toml config.toml
 
 # Edit config.toml with your settings
 # Then convert using config

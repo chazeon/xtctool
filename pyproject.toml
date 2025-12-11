@@ -27,6 +27,7 @@ dev = [
     "pytest>=7.0.0",
     "black>=22.0.0",
     "mypy>=0.950",
+    "bump-my-version>=0.18.0",
 ]
 markdown = [
     "typst>=0.2.0",

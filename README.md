@@ -1,22 +1,45 @@
 # xtctool
 
-Convert images and documents to XTH/XTG/XTC formats for [Xteink](https://www.xteink.com/) ESP32 e-paper displays.
+Turn EPUB and PDF into beautiful books on your Xteink e-reader.
 
-Built for the [Xteink X4](https://www.xteink.com/products/xteink-x4) and compatible devices - compact e-paper displays powered by ESP32. The X4 is a pocket-sized 4.3" e-ink reader with 480×800 resolution, perfect for reading books, documents, and displaying custom content.
+Xteink can read EPUB natively, but the typography is rough. xtctool gives you **complete control** over fonts, spacing, margins, and layout - making your books actually pleasant to read.
+
+Built for [Xteink X4](https://www.xteink.com/products/xteink-x4) - 4.3" e-ink reader, 480×800 resolution.
+
+## Quick Start
+
+### Converting EPUB Books
+
+xtctool works with CommonMark markdown. Use pandoc to convert EPUB first:
+
+```bash
+# Step 1: Install pandoc (one-time setup)
+# macOS: brew install pandoc
+# Linux: apt install pandoc
+# Windows: https://pandoc.org/installing.html
+
+# Step 2: Convert EPUB to markdown
+pandoc "book.epub" --extract-media ./images -t commonmark -o book.md
+
+# Step 3: Convert to e-paper format
+xtctool convert book.md -o book.xtc -c config.toml
+```
+
+### What xtctool converts directly:
+- **PDF** documents
+- **Markdown** (CommonMark only)
+- **Typst** documents
+- **Images** (PNG, JPG)
+
+**Have EPUB, DOCX, or HTML?** → Convert to markdown with pandoc first (workflow above)
 
 ## Features
 
-- **Unified conversion pipeline** - handles multiple input formats through a single `convert` command
-- **Multiple input formats**: PDF, PNG, JPEG, Markdown, Typst, XTC, XTH, XTG
-- **Multiple output formats**:
-  - **XTH** - 4-level grayscale (2 bits per pixel)
-  - **XTG** - 1-bit monochrome (1 bit per pixel)
-  - **XTC** - multi-page container with metadata
-- **Markdown & Typst support** - render text documents with full typography control
-- **Configuration via TOML** - easily manage conversion settings
-- **Floyd-Steinberg dithering** - optional high-quality dithering with configurable strength
-- **Debug output** - decode frames back to PNG/PDF for inspection
-- **Direct upload** - send files directly to ESP32 devices over HTTP
+- **Multiple formats**: XTH (4-level grayscale), XTG (1-bit mono), XTC (multi-page)
+- **High-quality rendering**: Supersampling + Floyd-Steinberg dithering
+- **Full typography control**: Fonts, margins, spacing via config files
+- **Debug output**: Decode frames back to PNG/PDF for inspection
+- **Direct upload**: Send files to ESP32 devices over HTTP
 
 ## Installation
 
@@ -26,28 +49,35 @@ Built for the [Xteink X4](https://www.xteink.com/products/xteink-x4) and compati
 # Install uv if you haven't
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Install xtctool
+# Create virtual environment and install
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 uv pip install -e .
 
-# Or with optional dependencies
-uv pip install -e ".[performance]"  # Adds numba for ~10x faster dithering
-uv pip install -e ".[markdown]"     # Adds Typst & Jinja2 for Markdown/Typst support
+# Or install with optional dependencies
+uv pip install -e ".[markdown,performance]"  # Full installation
 ```
 
-### Using pip
+**Optional dependencies:**
+- `[markdown]` - Typst & Jinja2 for Markdown/EPUB rendering
+- `[performance]` - numba for ~10x faster dithering
+
+### Using pip (without uv)
 
 ```bash
-# Basic installation (PDF, images only)
-pip install .
+# Create virtual environment (recommended)
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-# With Markdown/Typst support
-pip install ".[markdown]"
+# Install xtctool
+pip install -e ".[markdown,performance]"
+```
 
-# With performance optimization
-pip install ".[performance]"
+### For Contributors
 
-# With everything
-pip install ".[markdown,performance]"
+```bash
+# Install with development dependencies
+uv pip install -e ".[dev,markdown,performance]"
 ```
 
 ### Dependencies
@@ -63,37 +93,20 @@ pip install ".[markdown,performance]"
 - **`[markdown]`** - Typst (0.2+) & Jinja2 (3.0+) for Markdown/Typst rendering
 - **`[performance]`** - numba for 10x faster dithering
 
-## Quick Start
-
-### Basic conversion
+### Other Common Conversions
 
 ```bash
-# Convert PDF to XTH (4-level grayscale)
-uv run xtctool convert input.pdf -o output.xth
+# After installation, activate your virtual environment
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Convert PDF to e-paper format
+xtctool convert document.pdf -o document.xtc
 
 # Convert images to XTC container
-uv run xtctool convert page1.png page2.jpg page3.png -o output.xtc
+xtctool convert page1.png page2.jpg page3.png -o book.xtc
 
-# Convert entire PDF to multi-page XTC
-uv run xtctool convert document.pdf -o document.xtc
-```
-
-### With configuration file
-
-```bash
-# Create config from example
-cp config.example.toml config.toml
-
-# Edit config.toml with your settings
-# Then convert using config
-uv run xtctool convert input.pdf -o output.xtc -c config.toml
-```
-
-### Upload to device
-
-```bash
-# Upload to ESP32 e-paper display
-uv run xtctool upload output.xtc --host 192.168.1.100
+# Upload to your device
+xtctool upload book.xtc --host 192.168.1.100
 ```
 
 ## Usage
@@ -277,6 +290,25 @@ xtctool convert input.pdf -o output.xtc -c config.toml
 
 Convert Markdown and Typst documents to e-paper formats with full typography control.
 
+### Markdown Support
+
+**xtctool supports CommonMark only** (via [cmarker](https://typst.app/universe/package/cmarker/)).
+
+**Not supported:**
+- Pandoc Markdown with extensions (`{.class}`, `{#id}`, etc.)
+- GitHub Flavored Markdown (GFM) tables/checkboxes
+- Other non-standard markdown flavors
+
+**Converting other formats:**
+Use pandoc to convert to CommonMark first (see EPUB workflow at top of README).
+
+```bash
+# EPUB, DOCX, HTML, etc. → CommonMark
+pandoc input.epub -t commonmark -o output.md
+pandoc document.docx -t commonmark -o output.md
+pandoc page.html -t commonmark -o output.md
+```
+
 ### Quick Examples
 
 ```bash
@@ -311,19 +343,19 @@ Templates are installed with xtctool in `xtctool/templates/`:
 **Using custom templates:**
 
 1. Create your template (e.g., `my-template.typ.jinja`):
-```jinja
-#set page(width: {{ width_pt }}pt, height: {{ height_pt }}pt)
-#set text(font: "{{ font }}", size: {{ font_size }}pt)
+    ```jinja
+    #set page(width: {{ width_pt }}pt, height: {{ height_pt }}pt)
+    #set text(font: "{{ font }}", size: {{ font_size }}pt)
 
-#import "@preview/cmarker:0.1.7"
-#cmarker.render(read("{{ markdown_file }}"))
-```
+    #import "@preview/cmarker:0.1.7"
+    #cmarker.render(read("{{ markdown_file }}"))
+    ```
 
 2. Specify in config:
-```toml
-[typst]
-template = "/path/to/my-template.typ.jinja"
-```
+    ```toml
+    [typst]
+    template = "/path/to/my-template.typ.jinja"
+    ```
 
 **Available template variables:**
 - `width_pt`, `height_pt` - Page dimensions in points

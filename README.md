@@ -35,7 +35,7 @@ xtctool convert book.md -o book.xtc -c config.toml
 
 <table>
 <tr>
-<td width="55%">
+<td width="60%">
 
 ## Features
 
@@ -46,7 +46,7 @@ xtctool convert book.md -o book.xtc -c config.toml
 - **Direct upload**: Send files to ESP32 devices over HTTP
 
 </td>
-<td width="45%">
+<td width="40%">
 
 <img src="mockup/mockup.png" width="100%" alt="xtctool on Xteink device">
 

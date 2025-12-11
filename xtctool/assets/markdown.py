@@ -95,6 +95,7 @@ class MarkdownFileAsset(FileAsset):
             'list_spacing': typst_cfg.get('list_spacing', 8),
             'list_tight': str(typst_cfg.get('list_tight', False)).lower(),
             'show_page_numbers': str(typst_cfg.get('show_page_numbers', True)).lower(),
+            'page_number_style': typst_cfg.get('page_number_style', 'fraction'),
             'page_number_size': typst_cfg.get('page_number_size', 12),
             'show_toc': str(typst_cfg.get('show_toc', False)).lower(),
             'toc_title': typst_cfg.get('toc_title', 'Contents'),

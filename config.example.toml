@@ -67,6 +67,7 @@ margin_bottom = 32
 
 # Page numbers
 show_page_numbers = true
+page_number_style = "fraction"  # Options: "plain" (just number), "fraction" (1/10), "bar" (progress bar)
 page_number_size = 12  # Font size for page numbers (in points)
 
 # Table of contents

@@ -8,7 +8,8 @@
    - language: Language code (default: "en")
    - list_spacing: Space between list items (default: 8pt)
    - list_tight: Remove extra spacing in lists (default: false)
-   - show_page_numbers: Show page numbers in footer (default: true)
+   - show_page_numbers: Show page numbers (default: true)
+   - page_number_style: Style for page numbers - "plain", "fraction", "bar" (default: "fraction")
    - page_number_size: Page number font size (default: 10pt)
    - show_toc: Show table of contents (default: false)
    - toc_title: TOC title (default: "Contents")
@@ -25,11 +26,69 @@
     bottom: {{ margin_bottom|default(32) }}pt,
   ),
 {% if show_page_numbers|default(true) %}
-  footer: context [
-    #set text(size: {{ page_number_size|default(12) }}pt)
-    #align(center, counter(page).display("1"))
-  ],
-{% endif %}
+{%- set style = page_number_style|default('fraction') %}
+{%- if style in ['plain', 'fraction'] %}
+  footer: context {
+    set text(size: {{ page_number_size|default(12) }}pt)
+    align(center)[
+    #let current = counter(page).get().first()
+{%- if style == 'plain' %}
+    #current
+{%- else %}
+    #let total = counter(page).final().last()
+    #current / #total
+{%- endif %}
+    #v(4pt)
+    ]
+  },
+{%- elif style == 'bar' %}
+  foreground: context {
+    let current = counter(page).get().first()
+    let total = counter(page).final().last()
+    let ratio = current / total
+
+    // --- 1. Define Geometry ---
+    let page-w = {{ width_pt }}pt
+    let m-left = {{ margin_left|default(16) }}pt
+    let m-right = {{ margin_right|default(16) }}pt
+
+    // --- 2. Measure Text ---
+    // Note: Wrapped in box() to prevent line breaking on spaces
+    let num-content = box(text(size: {{ page_number_size|default(12) }}pt)[#current / #total])
+    let text-width = measure(num-content).width
+
+    // --- 3. Calculate Position ---
+    let bar-edge = ratio * page-w
+
+    // Constraint A: Right edge must not go past the text area
+    // (Page Width - Right Margin - Text Width) gives the max *start* position
+    let max-x = page-w - m-right - text-width
+
+    // Constraint B: Text must start at least at the left margin
+    let min-x = m-left
+
+    // Apply clamps: Ideal start position is (bar_tip - text_width)
+    let text-pos-x = calc.max(min-x, calc.min(bar-edge - text-width, max-x))
+
+    // --- 4. Draw Elements ---
+
+    // The Page Number
+    place(
+      bottom + left,
+      dx: text-pos-x,
+      dy: -12pt,
+      box(width: text-width, align(left, num-content))
+    )
+
+    // The Progress Bar
+    align(bottom + left,
+      block(width: 100%, height: 4pt, fill: luma(230))[
+        #box(width: ratio * 100%, height: 100%, fill: black)
+      ]
+    )
+  },
+{%- endif %}
+{%- endif %}
 )
 
 #set text(

@@ -1,23 +1,10 @@
 # xtctool
 
-<table>
-<tr>
-<td valign="top" width="55%">
-
 Turn EPUB and PDF into beautiful books on your Xteink e-reader.
 
 Xteink can read EPUB natively, but the typography is rough. xtctool gives you **complete control** over fonts, spacing, margins, and layout - making your books actually pleasant to read.
 
 Built for [Xteink X4](https://www.xteink.com/products/xteink-x4) - 4.3" e-ink reader, 480×800 resolution.
-
-</td>
-<td valign="top" width="45%">
-
-<img src="mockup/mockup.png" width="100%" alt="xtctool mockup on Xteink device">
-
-</td>
-</tr>
-</table>
 
 ## Quick Start
 
@@ -47,6 +34,10 @@ xtctool convert book.md -o book.xtc -c config.toml
 **Have EPUB, DOCX, or HTML?** → Convert to markdown with pandoc first (workflow above)
 
 ## Features
+
+<p align="center">
+  <img src="mockup/mockup.png" width="400" alt="xtctool on Xteink device">
+</p>
 
 - **Multiple formats**: XTH (4-level grayscale), XTG (1-bit mono), XTC (multi-page)
 - **High-quality rendering**: Supersampling + Floyd-Steinberg dithering

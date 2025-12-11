@@ -76,7 +76,7 @@
     place(
       bottom + left,
       dx: text-pos-x,
-      dy: -12pt,
+      dy: -8pt,
       box(width: text-width, align(left, num-content))
     )
 
@@ -108,10 +108,12 @@
   justify: {{ justify|default('true') }},
   spacing: {{ line_spacing|default(0.7) }}em,
   first-line-indent: 1.0em,
+{%- if justify|default('true') == 'true' %}
   justification-limits: (
     spacing: (min: 83.33% + 0pt, max: 120% + 0pt),
     tracking: (min: -0.01em, max: 0.02em),
-  )
+  ),
+{%- endif %}
 )
 
 #set list(

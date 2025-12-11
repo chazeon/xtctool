@@ -1,10 +1,21 @@
 # xtctool
 
+<div style="display: flex; align-items: center; gap: 2rem;">
+<div style="flex: 1;">
+
 Turn EPUB and PDF into beautiful books on your Xteink e-reader.
 
 Xteink can read EPUB natively, but the typography is rough. xtctool gives you **complete control** over fonts, spacing, margins, and layout - making your books actually pleasant to read.
 
 Built for [Xteink X4](https://www.xteink.com/products/xteink-x4) - 4.3" e-ink reader, 480×800 resolution.
+
+</div>
+<div style="flex: 0 0 400px;">
+
+<img src="mockup/mockup.png" width="100%" alt="xtctool mockup on Xteink device">
+
+</div>
+</div>
 
 ## Quick Start
 

@@ -104,9 +104,9 @@
 )
 
 #set par(
-  leading: {{ line_spacing|default(0.7) }}em,
+  leading: {{ line_spacing|default(0.5) }}em,
   justify: {{ justify|default('true') }},
-  spacing: {{ line_spacing|default(0.7) }}em,
+  spacing: {{ line_spacing|default(0.5) }}em,
   first-line-indent: 1.0em,
 {%- if justify|default('true') == 'true' %}
   justification-limits: (

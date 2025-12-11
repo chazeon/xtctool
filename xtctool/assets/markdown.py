@@ -85,7 +85,7 @@ class MarkdownFileAsset(FileAsset):
             'ppi': ppi,
             'font': typst_cfg.get('font', 'Liberation Serif'),
             'font_size': typst_cfg.get('font_size', 24),
-            'line_spacing': typst_cfg.get('line_spacing', 0.7),
+            'line_spacing': typst_cfg.get('line_spacing', 0.5),
             'justify': str(typst_cfg.get('justify', True)).lower(),
             'language': typst_cfg.get('language', 'en'),
             'margin_left': typst_cfg.get('margin_left', 16),

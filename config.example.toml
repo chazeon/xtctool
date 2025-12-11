@@ -55,7 +55,7 @@ template = "default"
 # Good fonts for e-paper: Liberation Serif, Georgia, Linux Libertine, Noto Serif
 font = "Liberation Serif"
 font_size = 24
-line_spacing = 0.7
+line_spacing = 0.5
 justify = true
 language = "en"
 

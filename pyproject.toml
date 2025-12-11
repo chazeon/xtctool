@@ -46,3 +46,12 @@ packages = ["xtctool"]
 [tool.black]
 line-length = 100
 target-version = ['py38']
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "xtctool"]
+addopts = [
+    "--doctest-modules",
+    "--doctest-continue-on-failure",
+    "-v",
+]
+doctest_optionflags = ["NORMALIZE_WHITESPACE", "ELLIPSIS"]

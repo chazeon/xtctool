@@ -33,22 +33,22 @@ xtctool convert book.md -o book.xtc -c config.toml
 
 **Have EPUB, DOCX, or HTML?** → Convert to markdown with pandoc first (workflow above)
 
+## Features
+
 <table>
 <tr>
-<td width="60%">
+<td width="40%">
 
-## Features
+<img src="mockup/mockup.png" width="100%" alt="xtctool on Xteink device">
+
+</td>
+<td width="60%">
 
 - **Multiple formats**: XTH (4-level grayscale), XTG (1-bit mono), XTC (multi-page)
 - **High-quality rendering**: Supersampling + Floyd-Steinberg dithering
 - **Full typography control**: Fonts, margins, spacing via config files
 - **Debug output**: Decode frames back to PNG/PDF for inspection
 - **Direct upload**: Send files to ESP32 devices over HTTP
-
-</td>
-<td width="40%">
-
-<img src="mockup/mockup.png" width="100%" alt="xtctool on Xteink device">
 
 </td>
 </tr>

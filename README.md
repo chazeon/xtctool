@@ -33,11 +33,11 @@ xtctool convert book.md -o book.xtc -c config.toml
 
 **Have EPUB, DOCX, or HTML?** → Convert to markdown with pandoc first (workflow above)
 
-## Features
-
 <table>
 <tr>
 <td width="55%">
+
+## Features
 
 - **Multiple formats**: XTH (4-level grayscale), XTG (1-bit mono), XTC (multi-page)
 - **High-quality rendering**: Supersampling + Floyd-Steinberg dithering

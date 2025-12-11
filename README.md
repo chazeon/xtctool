@@ -187,6 +187,20 @@ xtctool convert cover.png chapter1.pdf chapter2.pdf -o book.xtc
 xtctool convert part1.xtc part2.xth part3.xtg -o full.xtc
 ```
 
+### Page Selection
+
+Select specific pages from documents using colon syntax:
+
+```bash
+# Convert only pages 1-10 from a PDF
+xtctool convert book.pdf:1-10 -o chapter1.xtc
+
+# Extract first 3 pages for testing
+xtctool convert document.md:-3 -o preview.xtc
+```
+
+Supports single pages (`5`), ranges (`1-10`), lists (`1,5,10`), complex (`1-4,7,10-12`), and open-ended (`5-`, `-3`). Works with PDF, Markdown, Typst, and XTC files.
+
 ### Upload Command
 
 Upload files directly to ESP32 e-paper devices:

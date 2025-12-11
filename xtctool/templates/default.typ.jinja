@@ -69,6 +69,16 @@
 #show list: it => block(above: 0.65em, below: 0.65em, it)
 #show enum: it => block(above: 0.65em, below: 0.65em, it)
 
+// Strip all links since e-paper isn't clickable
+#show link: it => {
+  // Just show the link text without the link
+  if type(it.body) == content {
+    it.body
+  } else {
+    str(it.dest)
+  }
+}
+
 #show heading: it => block(above: 1.5em, below: 1em)[
   #set text(weight: "medium")
   #it.body

@@ -35,15 +35,24 @@ xtctool convert book.md -o book.xtc -c config.toml
 
 ## Features
 
-<p align="center">
-  <img src="mockup/mockup.png" width="400" alt="xtctool on Xteink device">
-</p>
+<table>
+<tr>
+<td width="55%">
 
 - **Multiple formats**: XTH (4-level grayscale), XTG (1-bit mono), XTC (multi-page)
 - **High-quality rendering**: Supersampling + Floyd-Steinberg dithering
 - **Full typography control**: Fonts, margins, spacing via config files
 - **Debug output**: Decode frames back to PNG/PDF for inspection
 - **Direct upload**: Send files to ESP32 devices over HTTP
+
+</td>
+<td width="45%">
+
+<img src="mockup/mockup.png" width="100%" alt="xtctool on Xteink device">
+
+</td>
+</tr>
+</table>
 
 ## Installation
 

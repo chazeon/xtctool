@@ -17,7 +17,7 @@ class TypstFileAsset(FileAsset):
     relative to the .typ file's directory.
     """
 
-    def convert(self, config: dict[str, Any]) -> list[ImageAsset]:
+    def _convert_impl(self, config: dict[str, Any]) -> list[ImageAsset]:
         """Render Typst file to image asset(s).
 
         Args:
@@ -39,4 +39,18 @@ class TypstFileAsset(FileAsset):
         logger.info(f"Rendering Typst file: {self.path}")
         images = renderer.render_file(self.path, root_dir=root_dir)
 
-        return [ImageAsset(img) for img in images]
+        # Apply page selection if specified in metadata
+        page_spec = self.get_metadata('page_spec')
+        if page_spec:
+            from ..utils import parse_page_range
+            pages = parse_page_range(page_spec, len(images))
+            images = [images[i-1] for i in pages]
+            logger.info(f"Selected {len(images)} pages (pages: {page_spec})")
+
+        # Create ImageAssets
+        assets = []
+        for img in images:
+            asset = ImageAsset(img)
+            assets.append(asset)
+
+        return assets

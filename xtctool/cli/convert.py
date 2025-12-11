@@ -13,6 +13,7 @@ from ..assets import (
     XTContainerAsset, TypstFileAsset, MarkdownFileAsset
 )
 from ..debug import output as debug_output
+from ..utils import parse_page_spec
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ DEFAULT_CONFIG = {
         'width': 480,
         'height': 800,
         'format': 'xth',
-        'resample_method': 'LANCZOS',  # BOX is better for text, LANCZOS for photos
+        'resample_method': 'BOX',  # BOX is better for text, LANCZOS for photos
         'title': '',
         'author': '',
         'publisher': '',
@@ -75,31 +76,49 @@ def load_config(config_path: Optional[str]) -> dict[str, Any]:
 
 
 def create_asset(path: str):
-    """Create appropriate asset from file path."""
-    p = Path(path)
+    """Create appropriate asset from file path.
+
+    Supports page selection syntax: file.pdf:1-4, file.md:2, etc.
+    """
+    # Parse page specification (e.g., "file.pdf:1-4")
+    file_path, page_spec = parse_page_spec(path)
+
+    # Validate file exists
+    if not Path(file_path).exists():
+        raise click.BadParameter(f"File not found: {file_path}")
+
+    p = Path(file_path)
     ext = p.suffix.lower()
 
+    asset = None
     if ext == '.pdf':
-        return PDFAsset(path)
+        asset = PDFAsset(file_path)
     elif ext in ['.png', '.jpg', '.jpeg']:
         from PIL import Image
-        img = Image.open(path)
-        return ImageAsset(img)
+        img = Image.open(file_path)
+        asset = ImageAsset(img)
     elif ext == '.typ':
-        return TypstFileAsset(path)
+        asset = TypstFileAsset(file_path)
     elif ext == '.md':
-        return MarkdownFileAsset(path)
+        asset = MarkdownFileAsset(file_path)
     elif ext == '.xtc':
-        return XTContainerAsset(path)
+        asset = XTContainerAsset(file_path)
     elif ext in ['.xth', '.xtg']:
-        return FileXTFrameAsset(path)
+        asset = FileXTFrameAsset(file_path)
     else:
-        logger.warning(f"Unknown file type: {path}")
+        logger.warning(f"Unknown file type: {file_path}")
         return None
+
+    # Set page selection metadata if specified
+    if asset and page_spec:
+        asset.set_metadata('page_spec', page_spec)
+        logger.debug(f"Page selection for {file_path}: {page_spec}")
+
+    return asset
 
 
 @click.command(help="Convert files to XTC/XTH/XTG format.")
-@click.argument("sources", type=click.Path(exists=True), nargs=-1, required=True)
+@click.argument("sources", type=str, nargs=-1, required=True)
 @click.option("-o", "--output", type=click.Path(), required=True, help="Output file")
 @click.option("-c", "--config", type=click.Path(exists=True), default=None, help="Config file")
 def convert(sources: tuple[str, ...], output: str, config: Optional[str]):

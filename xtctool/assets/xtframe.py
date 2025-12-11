@@ -20,6 +20,7 @@ class XTFrameAsset(Asset):
             data: Frame data bytes
             format: 'xth' or 'xtg'
         """
+        super().__init__()
         self.data = data
         self.format = format
         self._temp_file: Optional[str] = None
@@ -40,7 +41,10 @@ class XTFrameAsset(Asset):
             os.unlink(self._temp_file)
             self._temp_file = None
 
-    def convert(self, config: dict[str, Any]) -> 'XTFrameAsset':
+    # Final format - don't need metadata propagation
+    _auto_propagate_metadata = False
+
+    def _convert_impl(self, config: dict[str, Any]) -> 'XTFrameAsset':
         """Frame is final format - returns self."""
         return self
 
@@ -54,7 +58,7 @@ class FileXTFrameAsset(FileAsset):
         ext = os.path.splitext(path)[1].lower()
         self.format = ext[1:] if ext in ['.xth', '.xtg'] else 'xth'
 
-    def convert(self, config: dict[str, Any]) -> XTFrameAsset:
+    def _convert_impl(self, config: dict[str, Any]) -> XTFrameAsset:
         """Read file and convert to XTFrameAsset."""
         data = self.as_bytes()
         return XTFrameAsset(data, self.format)

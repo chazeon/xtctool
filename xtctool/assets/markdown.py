@@ -20,7 +20,7 @@ class MarkdownFileAsset(FileAsset):
     with fonts, margins, and other styling options.
     """
 
-    def convert(self, config: dict[str, Any]) -> list[ImageAsset]:
+    def _convert_impl(self, config: dict[str, Any]) -> list[ImageAsset]:
         """Render Markdown file to image asset(s) via Typst template.
 
         Args:
@@ -137,7 +137,21 @@ class MarkdownFileAsset(FileAsset):
             logger.info(f"Rendering Markdown file: {self.path}")
             images = renderer.render_file(temp_typst.name, root_dir=str(markdown_dir))
 
-            return [ImageAsset(img) for img in images]
+            # Apply page selection if specified in metadata
+            page_spec = self.get_metadata('page_spec')
+            if page_spec:
+                from ..utils import parse_page_range
+                pages = parse_page_range(page_spec, len(images))
+                images = [images[i-1] for i in pages]
+                logger.info(f"Selected {len(images)} of {len(images)} pages (pages: {page_spec})")
+
+            # Create ImageAssets
+            assets = []
+            for img in images:
+                asset = ImageAsset(img)
+                assets.append(asset)
+
+            return assets
 
         finally:
             # Clean up temp file

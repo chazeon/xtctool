@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class ImageAsset(BaseImageAsset):
     """Image asset with conversion to frame."""
 
-    def convert(self, config: dict[str, Any]) -> XTFrameAsset:
+    def _convert_impl(self, config: dict[str, Any]) -> XTFrameAsset:
         """Convert image to XTH or XTG frame.
 
         Args:

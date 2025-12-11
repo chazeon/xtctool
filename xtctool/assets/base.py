@@ -10,7 +10,16 @@ logger = logging.getLogger(__name__)
 
 
 class Asset(ABC):
-    """Base class for all assets."""
+    """Base class for all assets.
+
+    Assets can carry metadata that propagates through multi-step conversions.
+    This allows contextual information (like page selection) to flow through
+    the conversion pipeline even when intermediate formats are created.
+    """
+
+    def __init__(self):
+        """Initialize asset with empty metadata."""
+        self.metadata: dict[str, Any] = {}
 
     @abstractmethod
     def as_bytes(self) -> bytes:
@@ -22,6 +31,35 @@ class Asset(ABC):
         """Get asset as file path (may create temp file)."""
         pass
 
+    def set_metadata(self, key: str, value: Any) -> None:
+        """Set metadata value.
+
+        Args:
+            key: Metadata key
+            value: Metadata value
+        """
+        self.metadata[key] = value
+
+    def get_metadata(self, key: str, default: Any = None) -> Any:
+        """Get metadata value.
+
+        Args:
+            key: Metadata key
+            default: Default value if key not found
+
+        Returns:
+            Metadata value or default
+        """
+        return self.metadata.get(key, default)
+
+    def propagate_metadata(self, target: 'Asset') -> None:
+        """Propagate metadata to another asset.
+
+        Args:
+            target: Asset to receive metadata
+        """
+        target.metadata.update(self.metadata)
+
     def cleanup(self) -> None:
         """Clean up any temporary resources."""
         pass
@@ -30,10 +68,38 @@ class Asset(ABC):
         """Auto cleanup on destruction."""
         self.cleanup()
 
+    # Set to False in subclasses to disable automatic metadata propagation
+    _auto_propagate_metadata: bool = True
+
     def convert(self, config: dict[str, Any]) -> Any:
         """Convert this asset to its next stage.
 
-        Override in subclasses to define conversion path.
+        Override _convert_impl() in subclasses to define conversion logic.
+        Metadata is automatically propagated to results unless
+        _auto_propagate_metadata is set to False.
+
+        Args:
+            config: Configuration dictionary
+
+        Returns:
+            Converted asset(s) or self
+        """
+        result = self._convert_impl(config)
+
+        # Auto-propagate metadata to results
+        if self._auto_propagate_metadata and result is not self:
+            if isinstance(result, Asset):
+                self.propagate_metadata(result)
+            elif isinstance(result, list):
+                for item in result:
+                    if isinstance(item, Asset):
+                        self.propagate_metadata(item)
+
+        return result
+
+    def _convert_impl(self, config: dict[str, Any]) -> Any:
+        """Implement conversion logic in subclasses.
+
         Default: no conversion (final format).
 
         Args:
@@ -49,6 +115,7 @@ class MemoryAsset(Asset):
     """Asset stored in memory as bytes."""
 
     def __init__(self, data: bytes):
+        super().__init__()
         self.data = data
         self._temp_file: Optional[str] = None
 
@@ -73,6 +140,7 @@ class FileAsset(Asset):
     """Asset backed by a file on disk."""
 
     def __init__(self, path: str, is_temp: bool = False):
+        super().__init__()
         self.path = path
         self.is_temp = is_temp
 
@@ -92,6 +160,7 @@ class ImageAsset(Asset):
     """Asset wrapping a PIL Image."""
 
     def __init__(self, image):  # image: PIL.Image.Image
+        super().__init__()
         self.image = image
         self._temp_file: Optional[str] = None
 

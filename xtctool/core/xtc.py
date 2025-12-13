@@ -91,8 +91,10 @@ class XTCWriter:
             index_offset: Offset to index table
             data_offset: Offset to data area
         """
-        has_metadata = bool(self.metadata.title or self.metadata.author)
         has_chapters = len(self.chapters) > 0
+        # Metadata section must be written if we have title/author OR chapters
+        # (chapter_count is stored in metadata section)
+        has_metadata = bool(self.metadata.title or self.metadata.author or has_chapters)
 
         f.write(struct.pack('<I', self.MAGIC))              # mark (4 bytes)
         f.write(struct.pack('<H', self.VERSION))            # version (2 bytes)
@@ -181,8 +183,10 @@ class XTCWriter:
         page_count = len(frame_data_list)
 
         # Calculate offsets
-        has_metadata = bool(self.metadata.title or self.metadata.author)
         has_chapters = len(self.chapters) > 0
+        # Metadata section must be written if we have title/author OR chapters
+        # (chapter_count is stored in metadata section)
+        has_metadata = bool(self.metadata.title or self.metadata.author or has_chapters)
 
         current_offset = self.HEADER_SIZE
         metadata_offset = current_offset if has_metadata else 0

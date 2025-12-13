@@ -48,15 +48,18 @@ Third chapter content.
             typ_file = Path(tmpdir) / "test.typ"
             typ_file.write_text(typst_content)
 
-            # Convert to image assets with TOC
+            # Convert through pipeline: Typst → PDF → Images → Frames
             typst_asset = TypstFileAsset(str(typ_file))
             config = {'extract_toc': True, 'output': {'format': 'xth'}}
-            image_assets = typst_asset.convert(config)
 
-            # Verify TOC is attached to images
+            # Step 1: Typst → PDF
+            pdf_asset = typst_asset.convert(config)
+
+            # Step 2: PDF → Images
+            image_assets = pdf_asset.convert(config)
             assert len(image_assets) == 3  # 3 pages
 
-            # Convert to XTH frames
+            # Step 3: Images → Frames
             frames = []
             for img_asset in image_assets:
                 frame = img_asset.convert(config)
@@ -116,12 +119,17 @@ This is the results section.
             md_file = Path(tmpdir) / "test.md"
             md_file.write_text(markdown_content)
 
-            # Convert to image assets with TOC
+            # Convert through pipeline: Markdown → PDF → Images → Frames
             md_asset = MarkdownFileAsset(str(md_file))
             config = {'extract_toc': True, 'output': {'format': 'xth', 'height': 600}}
-            image_assets = md_asset.convert(config)
 
-            # Convert to frames
+            # Step 1: Markdown → PDF
+            pdf_asset = md_asset.convert(config)
+
+            # Step 2: PDF → Images
+            image_assets = pdf_asset.convert(config)
+
+            # Step 3: Images → Frames
             frames = []
             for img_asset in image_assets:
                 frame = img_asset.convert(config)
@@ -201,7 +209,10 @@ Just plain text.
 
             typst_asset = TypstFileAsset(str(typ_file))
             config = {'extract_toc': True, 'output': {'format': 'xth'}}
-            image_assets = typst_asset.convert(config)
+
+            # Pipeline: Typst → PDF → Images → Frames
+            pdf_asset = typst_asset.convert(config)
+            image_assets = pdf_asset.convert(config)
 
             frames = []
             for img_asset in image_assets:

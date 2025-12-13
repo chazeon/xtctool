@@ -290,9 +290,11 @@ class XTCReader:
             self._read_metadata(data, metadata_offset)
 
         # Read chapters if present
-        if has_chapters:
+        if has_chapters and self.metadata:
             chapter_offset = metadata_offset + self.METADATA_SIZE if has_metadata else self.HEADER_SIZE
-            self._read_chapters(data, chapter_offset, has_chapters)
+            chapter_count = self.metadata.chapter_count
+            if chapter_count > 0:
+                self._read_chapters(data, chapter_offset, chapter_count)
 
         # Read index table and extract frames
         frames = []

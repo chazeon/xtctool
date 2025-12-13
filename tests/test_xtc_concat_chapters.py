@@ -56,8 +56,11 @@ Second document, chapter 4.
             typ1_file.write_text(typst1_content)
 
             typst1_asset = TypstFileAsset(str(typ1_file))
+            # Pipeline: Typst → PDF → Images → Frames
+            pdf1 = typst1_asset.convert(config)
+            images1 = pdf1.convert(config)
             frames1 = []
-            for img in typst1_asset.convert(config):
+            for img in images1:
                 frames1.append(img.convert(config))
 
             xtc1_file = tmpdir / "doc1.xtc"
@@ -75,8 +78,11 @@ Second document, chapter 4.
             typ2_file.write_text(typst2_content)
 
             typst2_asset = TypstFileAsset(str(typ2_file))
+            # Pipeline: Typst → PDF → Images → Frames
+            pdf2 = typst2_asset.convert(config)
+            images2 = pdf2.convert(config)
             frames2 = []
-            for img in typst2_asset.convert(config):
+            for img in images2:
                 frames2.append(img.convert(config))
 
             xtc2_file = tmpdir / "doc2.xtc"
@@ -158,8 +164,11 @@ From PDF converted to XTC.
             typ1_file.write_text(typst_content)
 
             typst1_asset = TypstFileAsset(str(typ1_file))
+            # Pipeline: Typst → PDF → Images → Frames
+            pdf1 = typst1_asset.convert(config)
+            images1 = pdf1.convert(config)
             frames1 = []
-            for img in typst1_asset.convert(config):
+            for img in images1:
                 frames1.append(img.convert(config))
 
             xtc1_file = tmpdir / "doc1.xtc"
@@ -170,8 +179,11 @@ From PDF converted to XTC.
             typ2_file.write_text(typst_content)
 
             typst2_asset = TypstFileAsset(str(typ2_file))
+            # Pipeline: Typst → PDF → Images → Frames
+            pdf2 = typst2_asset.convert(config)
+            images2 = pdf2.convert(config)
             frames2 = []
-            for img in typst2_asset.convert(config):
+            for img in images2:
                 frames2.append(img.convert(config))
 
             # Concatenate: XTC + newly converted frames
@@ -217,8 +229,11 @@ Content for chapter {n}.
                 typ_file.write_text(typst_template.format(n=i))
 
                 asset = TypstFileAsset(str(typ_file))
+                # Pipeline: Typst → PDF → Images → Frames
+                pdf = asset.convert(config)
+                images = pdf.convert(config)
                 frames = []
-                for img in asset.convert(config):
+                for img in images:
                     frames.append(img.convert(config))
 
                 xtc_file = tmpdir / f"doc{i}.xtc"

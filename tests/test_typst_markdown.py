@@ -149,10 +149,16 @@ class TestTypstFileAsset:
 
     def test_convert_to_image_asset(self, sample_typst_file, test_config):
         """Test converting Typst file to ImageAsset(s)."""
+        from xtctool.assets.pdf import PDFAsset
+
         asset = TypstFileAsset(sample_typst_file)
 
-        result = asset.convert(test_config)
+        # Typst → PDF
+        pdf_asset = asset.convert(test_config)
+        assert isinstance(pdf_asset, PDFAsset)
 
+        # PDF → Images
+        result = pdf_asset.convert(test_config)
         assert isinstance(result, list)
         assert len(result) > 0
         assert isinstance(result[0], ImageAsset)
@@ -164,7 +170,9 @@ class TestTypstFileAsset:
         """Test that multi-file Typst projects work."""
         asset = TypstFileAsset(multi_file_typst_project)
 
-        result = asset.convert(test_config)
+        # Pipeline: Typst/Markdown → PDF → Images
+        pdf_asset = asset.convert(test_config)
+        result = pdf_asset.convert(test_config)
 
         assert isinstance(result, list)
         assert len(result) > 0
@@ -178,7 +186,9 @@ class TestMarkdownFileAsset:
         """Test converting Markdown file to ImageAsset(s) via Typst template."""
         asset = MarkdownFileAsset(sample_markdown_file)
 
-        result = asset.convert(test_config)
+        # Pipeline: Typst/Markdown → PDF → Images
+        pdf_asset = asset.convert(test_config)
+        result = pdf_asset.convert(test_config)
 
         assert isinstance(result, list)
         assert len(result) > 0
@@ -199,7 +209,9 @@ class TestMarkdownFileAsset:
         }
 
         asset = MarkdownFileAsset(sample_markdown_file)
-        result = asset.convert(custom_config)
+        # Pipeline: Typst/Markdown → PDF → Images
+        pdf_asset = asset.convert(custom_config)
+        result = pdf_asset.convert(custom_config)
 
         # Should succeed with custom settings
         assert isinstance(result, list)
@@ -210,7 +222,9 @@ class TestMarkdownFileAsset:
         """Test that default template works."""
         asset = MarkdownFileAsset(sample_markdown_file)
 
-        result = asset.convert(test_config)
+        # Pipeline: Typst/Markdown → PDF → Images
+        pdf_asset = asset.convert(test_config)
+        result = pdf_asset.convert(test_config)
 
         assert isinstance(result, list)
         assert len(result) > 0
@@ -234,7 +248,9 @@ class TestTemplateIntegration:
     def test_template_renders_markdown(self, sample_markdown_file, test_config):
         """Test that template correctly includes and renders markdown."""
         asset = MarkdownFileAsset(sample_markdown_file)
-        result = asset.convert(test_config)
+        # Pipeline: Typst/Markdown → PDF → Images
+        pdf_asset = asset.convert(test_config)
+        result = pdf_asset.convert(test_config)
 
         # The result should be rendered successfully
         assert isinstance(result, list)

@@ -20,15 +20,18 @@ class MarkdownFileAsset(FileAsset):
     with fonts, margins, and other styling options.
     """
 
-    def _convert_impl(self, config: dict[str, Any]) -> list[ImageAsset]:
-        """Render Markdown file to image asset(s) via Typst template.
+    def _convert_impl(self, config: dict[str, Any]) -> 'PDFAsset':
+        """Render Markdown file to PDF asset via Typst template.
 
         Args:
             config: Configuration dictionary
 
         Returns:
-            List of ImageAsset objects (one per page)
+            PDFAsset object
         """
+        from .pdf import PDFAsset
+        import typst
+
         output_cfg = config.get('output', {})
         typst_cfg = config.get('typst', {})
 
@@ -131,38 +134,20 @@ class MarkdownFileAsset(FileAsset):
             temp_typst.close()
 
             # Compile Typst to PDF
-            import typst
-            from .pdf import PDFAsset
-
             temp_pdf = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
             pdf_path = temp_pdf.name
             temp_pdf.close()
 
-            try:
-                logger.info(f"Compiling Markdown to PDF: {self.path}")
-                typst.compile(
-                    temp_typst.name,
-                    output=pdf_path,
-                    format='pdf',
-                    root=str(markdown_dir)
-                )
+            logger.info(f"Compiling Markdown to PDF: {self.path}")
+            typst.compile(
+                temp_typst.name,
+                output=pdf_path,
+                format='pdf',
+                root=str(markdown_dir)
+            )
 
-                # Use PDFAsset to convert PDF to images
-                pdf_asset = PDFAsset(pdf_path)
-
-                # Pass through page_spec metadata if present
-                page_spec = self.get_metadata('page_spec')
-                if page_spec:
-                    pdf_asset.set_metadata('page_spec', page_spec)
-
-                # Convert PDF to image assets (with TOC extraction)
-                assets = pdf_asset.convert(config)
-
-                return assets
-
-            finally:
-                # Clean up temp PDF
-                Path(pdf_path).unlink(missing_ok=True)
+            # Return PDFAsset (pipeline will convert to images automatically)
+            return PDFAsset(pdf_path, is_temp=True)
 
         finally:
             # Clean up temp typst file

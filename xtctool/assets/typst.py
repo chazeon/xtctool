@@ -1,4 +1,4 @@
-"""Typst asset - converts Typst files to images via PDF."""
+"""Typst asset - converts Typst files to PDF."""
 
 import logging
 import tempfile
@@ -6,27 +6,26 @@ from typing import Any
 from pathlib import Path
 
 from .base import FileAsset
-from .image import ImageAsset
 from .pdf import PDFAsset
 
 logger = logging.getLogger(__name__)
 
 
 class TypstFileAsset(FileAsset):
-    """Typst file asset. Converts to ImageAsset by rendering via PDF.
+    """Typst file asset. Converts to PDFAsset.
 
     Supports multi-file Typst projects - #include directives will resolve
     relative to the .typ file's directory.
     """
 
-    def _convert_impl(self, config: dict[str, Any]) -> list[ImageAsset]:
-        """Render Typst file to image asset(s) via PDF.
+    def _convert_impl(self, config: dict[str, Any]) -> PDFAsset:
+        """Compile Typst file to PDF asset.
 
         Args:
             config: Configuration dictionary
 
         Returns:
-            List of ImageAsset objects (one per page)
+            PDFAsset object
         """
         import typst
 
@@ -36,32 +35,17 @@ class TypstFileAsset(FileAsset):
         logger.info(f"Compiling Typst to PDF: {self.path}")
 
         # Create temporary PDF file
-        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp_pdf:
-            pdf_path = tmp_pdf.name
+        temp_pdf = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
+        pdf_path = temp_pdf.name
+        temp_pdf.close()
 
-        try:
-            # Compile Typst to PDF
-            typst.compile(
-                self.path,
-                output=pdf_path,
-                format='pdf',
-                root=root_dir
-            )
+        # Compile Typst to PDF
+        typst.compile(
+            self.path,
+            output=pdf_path,
+            format='pdf',
+            root=root_dir
+        )
 
-            # Use PDFAsset to convert PDF to images
-            pdf_asset = PDFAsset(pdf_path)
-
-            # Pass through page_spec metadata if present
-            page_spec = self.get_metadata('page_spec')
-            if page_spec:
-                pdf_asset.set_metadata('page_spec', page_spec)
-
-            # Convert PDF to image assets (with TOC extraction)
-            # PDFAsset will use config['pdf']['resolution'] if set
-            assets = pdf_asset.convert(config)
-
-            return assets
-
-        finally:
-            # Clean up temporary PDF
-            Path(pdf_path).unlink(missing_ok=True)
+        # Return PDFAsset (pipeline will convert to images automatically)
+        return PDFAsset(pdf_path, is_temp=True)

@@ -216,6 +216,71 @@ def convert(sources: tuple[str, ...], output: str, config: Optional[str]):
     logger.info(f"Done: {output}")
 
 
+def extract_chapters_from_toc(frames: list[XTFrameAsset]) -> list:
+    """Extract chapters from TOC and chapter metadata in frames.
+
+    This function handles two sources of chapter information:
+    1. TOC metadata (from PDF/Typst/Markdown headings)
+    2. Chapter metadata (from existing XTC files)
+
+    Args:
+        frames: List of frame assets with potential TOC or chapter metadata
+
+    Returns:
+        List of XTCChapter objects (0-based page numbers)
+    """
+    from ..core.xtc import XTCChapter
+
+    all_chapters = []
+
+    # Source 1: Extract from TOC metadata (PDF/Typst/Markdown)
+    all_toc_entries = []
+    for page_idx, frame in enumerate(frames):
+        toc = frame.get_metadata('toc')
+        if toc:
+            for entry in toc:
+                all_toc_entries.append((entry, page_idx))
+
+    if all_toc_entries:
+        # Extract level-1 entries (top-level chapters)
+        level1_entries = [(entry, idx) for entry, idx in all_toc_entries if entry.level == 1]
+
+        # Convert to chapters with start/end pages
+        for i, (entry, page_idx) in enumerate(level1_entries):
+            start_page = page_idx
+
+            # End page is either the page before next chapter, or last page
+            if i + 1 < len(level1_entries):
+                end_page = level1_entries[i + 1][1] - 1
+            else:
+                end_page = len(frames) - 1
+
+            all_chapters.append(XTCChapter(
+                name=entry.title,
+                start_page=start_page,
+                end_page=end_page
+            ))
+
+    # Source 2: Extract from chapter metadata (existing XTC files)
+    for page_idx, frame in enumerate(frames):
+        chapters = frame.get_metadata('chapters')
+        if chapters:
+            for chapter in chapters:
+                # Adjust page numbers: chapter.start_page is relative to original XTC,
+                # need to offset by current position in concatenated frames
+                offset = page_idx - chapter.start_page
+
+                all_chapters.append(XTCChapter(
+                    name=chapter.name,
+                    start_page=chapter.start_page + offset,
+                    end_page=chapter.end_page + offset
+                ))
+
+    # Sort by start page and return
+    all_chapters.sort(key=lambda ch: ch.start_page)
+    return all_chapters
+
+
 def write_xtc(output: str, frames: list[XTFrameAsset], cfg: dict[str, Any]) -> None:
     """Write frames as XTC file."""
     from ..core.xtc import XTCWriter, XTCMetadata
@@ -251,12 +316,18 @@ def write_xtc(output: str, frames: list[XTFrameAsset], cfg: dict[str, Any]) -> N
     direction_map = {'ltr': 0, 'rtl': 1, 'ttb': 2}
     reading_direction = direction_map.get(output_cfg.get('direction', 'ltr'), 0)
 
+    # Extract chapters from TOC metadata
+    chapters = extract_chapters_from_toc(frames)
+    if chapters:
+        logger.info(f"Extracted {len(chapters)} chapters from TOC")
+
     # Create XTC writer and write frames
     writer = XTCWriter(
         width=width,
         height=height,
         reading_direction=reading_direction,
         metadata=metadata,
+        chapters=chapters,
         page_format=page_format
     )
 

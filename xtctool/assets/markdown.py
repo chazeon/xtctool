@@ -29,15 +29,13 @@ class MarkdownFileAsset(FileAsset):
         Returns:
             List of ImageAsset objects (one per page)
         """
-        from ..utils import TypstRenderer
-
         output_cfg = config.get('output', {})
         typst_cfg = config.get('typst', {})
 
         # Get dimensions and rendering settings
         width = output_cfg.get('width', 480)
         height = output_cfg.get('height', 800)
-        ppi = typst_cfg.get('ppi', 144.0)
+        ppi = typst_cfg.get('ppi', 144.0)  # Kept for template variables
 
         # Calculate page dimensions in points (72 points = 1 inch)
         # Page size is calculated assuming 72 PPI base (1 pixel = 1 point)
@@ -132,28 +130,40 @@ class MarkdownFileAsset(FileAsset):
             temp_typst.write(typst_source)
             temp_typst.close()
 
-            # Render using TypstRenderer with markdown file's directory as root
-            # This allows images and other resources to be found
-            renderer = TypstRenderer(ppi=ppi)
-            logger.info(f"Rendering Markdown file: {self.path}")
-            images = renderer.render_file(temp_typst.name, root_dir=str(markdown_dir))
+            # Compile Typst to PDF
+            import typst
+            from .pdf import PDFAsset
 
-            # Apply page selection if specified in metadata
-            page_spec = self.get_metadata('page_spec')
-            if page_spec:
-                from ..utils import parse_page_range
-                pages = parse_page_range(page_spec, len(images))
-                images = [images[i-1] for i in pages]
-                logger.info(f"Selected {len(images)} of {len(images)} pages (pages: {page_spec})")
+            temp_pdf = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
+            pdf_path = temp_pdf.name
+            temp_pdf.close()
 
-            # Create ImageAssets
-            assets = []
-            for img in images:
-                asset = ImageAsset(img)
-                assets.append(asset)
+            try:
+                logger.info(f"Compiling Markdown to PDF: {self.path}")
+                typst.compile(
+                    temp_typst.name,
+                    output=pdf_path,
+                    format='pdf',
+                    root=str(markdown_dir)
+                )
 
-            return assets
+                # Use PDFAsset to convert PDF to images
+                pdf_asset = PDFAsset(pdf_path)
+
+                # Pass through page_spec metadata if present
+                page_spec = self.get_metadata('page_spec')
+                if page_spec:
+                    pdf_asset.set_metadata('page_spec', page_spec)
+
+                # Convert PDF to image assets (with TOC extraction)
+                assets = pdf_asset.convert(config)
+
+                return assets
+
+            finally:
+                # Clean up temp PDF
+                Path(pdf_path).unlink(missing_ok=True)
 
         finally:
-            # Clean up temp file
+            # Clean up temp typst file
             Path(temp_typst.name).unlink(missing_ok=True)

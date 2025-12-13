@@ -39,6 +39,17 @@ class XTContainerAsset(FileAsset):
         else:
             raise ValueError("XTC file contains no frames")
 
+        # Extract chapters from XTC (if present)
+        chapters_by_page = {}
+        if reader.chapters:
+            logger.info(f"Extracted {len(reader.chapters)} chapters from XTC")
+            # Group chapters by their start page
+            for chapter in reader.chapters:
+                page = chapter.start_page
+                if page not in chapters_by_page:
+                    chapters_by_page[page] = []
+                chapters_by_page[page].append(chapter)
+
         # Apply page selection if specified in metadata
         page_spec = self.get_metadata('page_spec')
         if page_spec:
@@ -51,8 +62,14 @@ class XTContainerAsset(FileAsset):
 
         # Create XTFrameAsset for each frame
         assets = []
-        for data in frame_data_list:
+        for page_idx, data in enumerate(frame_data_list):
             asset = XTFrameAsset(data, format_type)
+
+            # Attach chapters that start on this page
+            page_chapters = chapters_by_page.get(page_idx)
+            if page_chapters:
+                asset.set_metadata('chapters', page_chapters)
+
             assets.append(asset)
 
         return assets

@@ -2,6 +2,7 @@
 
 import logging
 from typing import Any
+from itertools import groupby
 from tqdm.auto import tqdm
 
 from .base import FileAsset
@@ -32,6 +33,16 @@ class PDFAsset(FileAsset):
         page_count = converter.get_page_count(self.path)
         pdf_name = Path(self.path).name
 
+        # Extract TOC if enabled and group by page
+        toc_by_page = {}
+        if config.get('extract_toc', True):
+            toc = converter.extract_toc(self.path)
+            if toc:
+                logger.info(f"PDF: Extracted {len(toc)} TOC entries from {pdf_name}")
+                # Group TOC entries by page number for efficient lookup
+                for page, entries in groupby(toc, key=lambda e: e.page):
+                    toc_by_page[page] = list(entries)
+
         # Check for page selection in metadata
         page_spec = self.get_metadata('page_spec')
         if page_spec:
@@ -51,6 +62,12 @@ class PDFAsset(FileAsset):
         ):
             image = converter.render_page(self.path, page_num)
             image_asset = ImageAsset(image)
+
+            # Attach TOC entries for this page
+            page_toc = toc_by_page.get(page_num)
+            if page_toc:
+                image_asset.set_metadata('toc', page_toc)
+
             assets.append(image_asset)
 
         return assets

@@ -1,56 +1,51 @@
-"""Typst asset - converts Typst files to images."""
+"""Typst asset - converts Typst files to PDF."""
 
 import logging
+import tempfile
 from typing import Any
 from pathlib import Path
 
 from .base import FileAsset
-from .image import ImageAsset
+from .pdf import PDFAsset
 
 logger = logging.getLogger(__name__)
 
 
 class TypstFileAsset(FileAsset):
-    """Typst file asset. Converts to ImageAsset by rendering.
+    """Typst file asset. Converts to PDFAsset.
 
     Supports multi-file Typst projects - #include directives will resolve
     relative to the .typ file's directory.
     """
 
-    def _convert_impl(self, config: dict[str, Any]) -> list[ImageAsset]:
-        """Render Typst file to image asset(s).
+    def _convert_impl(self, config: dict[str, Any]) -> PDFAsset:
+        """Compile Typst file to PDF asset.
 
         Args:
             config: Configuration dictionary
 
         Returns:
-            List of ImageAsset objects (one per page)
+            PDFAsset object
         """
-        from ..utils import TypstRenderer
-
-        typst_cfg = config.get('typst', {})
-        ppi = typst_cfg.get('ppi', 144.0)
-
-        renderer = TypstRenderer(ppi=ppi)
+        import typst
 
         # Get the directory containing the .typ file - used as root for #include
         root_dir = str(Path(self.path).parent)
 
-        logger.info(f"Rendering Typst file: {self.path}")
-        images = renderer.render_file(self.path, root_dir=root_dir)
+        logger.info(f"Compiling Typst to PDF: {self.path}")
 
-        # Apply page selection if specified in metadata
-        page_spec = self.get_metadata('page_spec')
-        if page_spec:
-            from ..utils import parse_page_range
-            pages = parse_page_range(page_spec, len(images))
-            images = [images[i-1] for i in pages]
-            logger.info(f"Selected {len(images)} pages (pages: {page_spec})")
+        # Create temporary PDF file
+        temp_pdf = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
+        pdf_path = temp_pdf.name
+        temp_pdf.close()
 
-        # Create ImageAssets
-        assets = []
-        for img in images:
-            asset = ImageAsset(img)
-            assets.append(asset)
+        # Compile Typst to PDF
+        typst.compile(
+            self.path,
+            output=pdf_path,
+            format='pdf',
+            root=root_dir
+        )
 
-        return assets
+        # Return PDFAsset (pipeline will convert to images automatically)
+        return PDFAsset(pdf_path, is_temp=True)

@@ -1,7 +1,16 @@
 """PDF to bitmap converter using PyMuPDF (fitz)."""
 
 from PIL import Image
+from dataclasses import dataclass
 import fitz  # PyMuPDF
+
+
+@dataclass
+class TOCEntry:
+    """Table of contents entry."""
+    title: str      # Heading text
+    level: int      # 1=h1, 2=h2, etc.
+    page: int       # Page number (1-based)
 
 
 class PDFConverter:
@@ -65,3 +74,22 @@ class PDFConverter:
         doc.close()
 
         return img
+
+    def extract_toc(self, pdf_path: str) -> list[TOCEntry]:
+        """Extract table of contents from PDF.
+
+        Args:
+            pdf_path: Path to PDF file
+
+        Returns:
+            List of TOCEntry objects, empty if no TOC
+        """
+        doc = fitz.open(pdf_path)
+        toc_raw = doc.get_toc()  # Returns [(level, title, page), ...]
+        doc.close()
+
+        # Convert to TOCEntry objects
+        toc = [TOCEntry(title=title, level=level, page=page)
+               for level, title, page in toc_raw]
+
+        return toc

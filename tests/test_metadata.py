@@ -180,8 +180,13 @@ Content for page 2.
         asset = TypstFileAsset(str(typst_file))
         asset.set_metadata('custom', 'test_value')
 
-        # Convert (should produce ImageAssets)
-        results = asset.convert(test_config)
+        # Convert through pipeline: Typst → PDF → Images
+        pdf_asset = asset.convert(test_config)
+        # Metadata should propagate to PDFAsset
+        assert pdf_asset.get_metadata('custom') == 'test_value'
+
+        # Convert PDF to images
+        results = pdf_asset.convert(test_config)
 
         # All resulting ImageAssets should have the metadata
         assert len(results) > 0
@@ -211,8 +216,14 @@ More content here.
         asset.set_metadata('page_spec', '1')
         asset.set_metadata('source', 'markdown')
 
-        # Convert (should produce ImageAssets)
-        results = asset.convert(test_config)
+        # Convert through pipeline: Markdown → PDF → Images
+        pdf_asset = asset.convert(test_config)
+        # Metadata should propagate to PDFAsset
+        assert pdf_asset.get_metadata('source') == 'markdown'
+        assert pdf_asset.get_metadata('page_spec') == '1'
+
+        # Convert PDF to images
+        results = pdf_asset.convert(test_config)
 
         # All resulting ImageAssets should have the metadata
         assert len(results) > 0
@@ -252,13 +263,15 @@ class TestPageSpecFiltering:
 
         # Convert without page_spec - should get all pages
         asset_all = TypstFileAsset(str(typst_file))
-        results_all = asset_all.convert(test_config)
+        pdf_all = asset_all.convert(test_config)
+        results_all = pdf_all.convert(test_config)
         assert len(results_all) == 4
 
         # Convert with page_spec - should get only selected pages
         asset_subset = TypstFileAsset(str(typst_file))
         asset_subset.set_metadata('page_spec', '1,3')
-        results_subset = asset_subset.convert(test_config)
+        pdf_subset = asset_subset.convert(test_config)
+        results_subset = pdf_subset.convert(test_config)
         assert len(results_subset) == 2
 
     def test_markdown_page_selection(self, test_config, tmp_path):
@@ -273,13 +286,15 @@ class TestPageSpecFiltering:
 
         # Convert without page_spec
         asset_all = MarkdownFileAsset(str(md_file))
-        results_all = asset_all.convert(test_config)
+        pdf_all = asset_all.convert(test_config)
+        results_all = pdf_all.convert(test_config)
         total_pages = len(results_all)
 
         # Convert with page_spec to get first page only
         asset_subset = MarkdownFileAsset(str(md_file))
         asset_subset.set_metadata('page_spec', '1')
-        results_subset = asset_subset.convert(test_config)
+        pdf_subset = asset_subset.convert(test_config)
+        results_subset = pdf_subset.convert(test_config)
 
         # Should get exactly 1 page
         assert len(results_subset) == 1

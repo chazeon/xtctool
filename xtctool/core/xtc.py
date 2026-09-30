@@ -30,7 +30,8 @@ class XTCChapter:
 class XTCWriter:
     """Writer for XTC format files (comic container with XTH pages)."""
 
-    MAGIC = 0x00435458  # "XTC\0" in little-endian
+    MAGIC = 0x00435458  # "XTC\0" in little-endian: a container of 1-bit XTG pages
+    MAGIC_XTCH = 0x48435458  # "XTCH" in little-endian: a container of 2-bit XTH pages
     VERSION = 0x0100     # Version 1.0
     HEADER_SIZE = 48
     METADATA_SIZE = 256
@@ -94,7 +95,8 @@ class XTCWriter:
         has_metadata = bool(self.metadata.title or self.metadata.author)
         has_chapters = len(self.chapters) > 0
 
-        f.write(struct.pack('<I', self.MAGIC))              # mark (4 bytes)
+        magic = self.MAGIC_XTCH if self.page_format == 'xth' else self.MAGIC
+        f.write(struct.pack('<I', magic))                   # mark (4 bytes)
         f.write(struct.pack('<H', self.VERSION))            # version (2 bytes)
         f.write(struct.pack('<H', page_count))              # pageCount (2 bytes)
         f.write(struct.pack('<B', self.reading_direction))  # readDirection (1 byte)
@@ -228,6 +230,7 @@ class XTCReader:
     """Reader for XTC format files (comic container)."""
 
     MAGIC = 0x00435458  # "XTC\0" in little-endian
+    MAGIC_XTCH = 0x48435458  # "XTCH" in little-endian
     HEADER_SIZE = 48
     METADATA_SIZE = 256
     CHAPTER_SIZE = 96
@@ -266,8 +269,10 @@ class XTCReader:
         """
         # Parse header
         magic = struct.unpack('<I', data[0:4])[0]
-        if magic != self.MAGIC:
-            raise ValueError(f"Invalid XTC magic: {magic:#x}, expected {self.MAGIC:#x}")
+        if magic not in (self.MAGIC, self.MAGIC_XTCH):
+            raise ValueError(
+                f"Invalid XTC magic: {magic:#x}, expected {self.MAGIC:#x} or {self.MAGIC_XTCH:#x}"
+            )
 
         version = struct.unpack('<H', data[4:6])[0]
         self.page_count = struct.unpack('<H', data[6:8])[0]
